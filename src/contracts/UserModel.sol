@@ -1,8 +1,12 @@
 pragma solidity ^0.5.0;
 
+
 contract UserModel {
-    uint public userID=0; //state variable will be store on the blockchain
-    //string public userAddress;
+
+    constructor() public {
+        //by default create the deployer as the managerus
+        createUser("Manager-Account", msg.sender, "Manager");
+    }
 
     struct User{
         uint id;
@@ -12,17 +16,15 @@ contract UserModel {
     }
 
     mapping(uint => User) public users;
+    uint public totalUser = 0;
 
     event UserCreated(uint id, string userName, address payable userAddress, string role);
 
-    constructor() public {
-        createUser("Manager-Account", msg.sender, "Manger");
-    }
-
     function createUser(string memory _userName, address payable _userAddress, string memory _role) public{
-        userID++;
-        users[userID] = User(userID, _userName, _userAddress, _role);
-        emit UserCreated(userID, _userName, _userAddress, _role);
+        totalUser++;
+        users[totalUser] = User(totalUser, _userName, _userAddress, _role);
+        emit UserCreated(totalUser, _userName, _userAddress, _role);
     }
 
 }
+

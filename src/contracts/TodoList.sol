@@ -1,7 +1,9 @@
 pragma solidity ^0.5.0;
 
 contract TodoList {
+
   uint public taskCount = 0;
+  mapping(uint => Task) public tasks;
 
   struct Task {
     uint id;
@@ -11,7 +13,9 @@ contract TodoList {
     address payable completedBy;
   }
 
-  mapping(uint => Task) public tasks;
+  constructor() public {
+    createTask("Default task");
+  }
 
   event TaskCreated(
     uint id,
@@ -27,9 +31,6 @@ contract TodoList {
     address payable completedBy
   );
 
-  constructor() public {
-    createTask("Default task");
-  }
 
   function createTask(string memory _content) public {
     // Require valid content

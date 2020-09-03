@@ -1,7 +1,9 @@
 import React, {Component} from 'react';
-import Identicon from 'identicon.js';
+import Identicon from '../../../node_modules/identicon.js/identicon';
+import TodoList from "../../abis/TodoList";
 
-class Main extends Component {
+class TaskManagement extends Component {
+
 
     render() {
         return (
@@ -32,21 +34,8 @@ class Main extends Component {
                             {this.props.tasks.map((task, key) => {
                                 return (
                                     <div className="card mb-4" key={key}>
-                                        <div className="card-header">
-                                            <div>
-                                                <label>
-                                                    <input name={task.id} onClick={(event) => {
-                                                        event.preventDefault()
-                                                        this.props.completeTask(event.target.name)
-                                                    }} type="checkbox" checked={task.completed} disabled={task.completed}/>
-                                                    {
-                                                        !task.completed ?
-                                                            <a>&nbsp;{task.content}</a>
-                                                            :
-                                                            <a style={{textDecorationLine: "line-through"}}>&nbsp;{task.content}</a>
-                                                    }
-                                                </label>
-                                            </div>
+                                        <div className="card-header" >
+                                            <p style={{marginBottom : 0}}>{task.content}</p>
                                         </div>
                                         <ul id="taskList" className="list-group list-group-flush">
                                             <li className="list-group-item">
@@ -90,6 +79,8 @@ class Main extends Component {
             </div>
         );
     }
+
+
 }
 
-export default Main;
+export default TaskManagement;
