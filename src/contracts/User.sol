@@ -14,6 +14,14 @@ contract User{
         role = _role;
     }
 
+    function setId(uint _id) public {
+        id = _id;
+    }
+
+    function getId() public view returns(uint) {
+        return id;
+    }
+
     function setUserName(string memory _userName) public {
         userName = _userName;
     }
@@ -28,6 +36,14 @@ contract User{
 
     function getUserAddress() public view returns(address payable) {
         return userAddress;
+    }
+
+    function setUserRole(string memory _role) public{
+        role = _role;
+    }
+
+    function getUserRole() public view returns(string memory){
+        return role;
     }
 
 }

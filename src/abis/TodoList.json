@@ -3678,10 +3678,67 @@
   },
   "networks": {
     "4447": {
-      "events": {},
+      "events": {
+        "0x1269015a5d391f69cb0c62599881ba11774c45477e6931c2c00f8d949d7acad5": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "content",
+              "type": "string"
+            },
+            {
+              "indexed": false,
+              "name": "completed",
+              "type": "bool"
+            },
+            {
+              "indexed": false,
+              "name": "createdBy",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "name": "completedBy",
+              "type": "address"
+            }
+          ],
+          "name": "TaskCreated",
+          "type": "event",
+          "signature": "0x1269015a5d391f69cb0c62599881ba11774c45477e6931c2c00f8d949d7acad5"
+        },
+        "0x6771bb9524f76c50a073137e01a6f75707d5ba01c94dc8f9b9a79aa1cb9e1fc3": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "completed",
+              "type": "bool"
+            },
+            {
+              "indexed": false,
+              "name": "completedBy",
+              "type": "address"
+            }
+          ],
+          "name": "TaskCompleted",
+          "type": "event",
+          "signature": "0x6771bb9524f76c50a073137e01a6f75707d5ba01c94dc8f9b9a79aa1cb9e1fc3"
+        }
+      },
       "links": {},
-      "address": "0xdc079C1cA84F9DF8f99ed0B29Fdf313A8ed5E97c",
-      "transactionHash": "0x936b5cfe638433f9b4734e806005e5990e856a26efc7ebfadda7a65238a5012b"
+      "address": "0x1E8e3ba22C23877ee3a49945BcCe6756c2C1e85C",
+      "transactionHash": "0x8791bbb0d41897186ee66197ee681ee5256e9623b93a7041dbaa0e5685909fd9"
     },
     "5777": {
       "events": {
@@ -3812,12 +3869,12 @@
         }
       },
       "links": {},
-      "address": "0x7eD21637554D4CD63301BB0DA3c922430e8F7974",
-      "transactionHash": "0x87a538c80791672ffb3811fb2470a60a890c803dffd5e32913bb334926061cdc"
+      "address": "0xccDE7e8764EE3C4616C304C6C5B4dF75A1Bbc18C",
+      "transactionHash": "0x47f85bde1589f3708e1d708b1d7f7556acbdf572c52520a8ce056b0cd9bc6df7"
     }
   },
   "schemaVersion": "3.0.2",
-  "updatedAt": "2020-09-03T05:10:12.912Z",
+  "updatedAt": "2020-09-09T16:46:20.659Z",
   "devdoc": {
     "methods": {}
   },

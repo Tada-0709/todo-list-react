@@ -16,18 +16,20 @@ class UserList extends Component{
                                 <th>Address</th>
                                 <th>Group</th>
                             </tr>
-                            <tr>
-                                <td>Peter</td>
-                                <td>Griffin</td>
-                                <td>$100</td>
-                                <td>Not Assigned</td>
-                            </tr>
-                            <tr>
-                                <td>Lois</td>
-                                <td>Griffin</td>
-                                <td>$150</td>
-                                <td>Not Assigned</td>
-                            </tr>
+                            <tbody>
+                            {this.props.users.map((user, key) => {
+                                    return(
+                                        <tr key={"row-"+key}>
+                                            <td key={key+"-1"}>{key+1}</td>
+                                            <td key={key+"-2"}>{user.userName}</td>
+                                            <td key={key+"-3"}>{user.userAddress}</td>
+                                            <td key={key+"-4"}>Not Assigned</td>
+                                        </tr>
+                                    )
+                                }
+                            )
+                            }
+                            </tbody>
                         </table>
                     </main>
                 </div>

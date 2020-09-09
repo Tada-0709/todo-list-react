@@ -7,32 +7,34 @@ import Info from "./Info"
 import UserList from "./User-List";
 
 import Web3 from "web3";
-import UserModel from "../../abis/UserModel";
+import UserCrud from "../../abis/UserCrud";
 import TodoList from "../../abis/TodoList";
 
 class index extends Component {
 
-    // render() {
-    //     return (
-    //         <div className="container-fluid mt-5">
-    //             <Navbar account={this.props.userName} address={this.props.accountAddress}/>
-    //             <div className="row">
-    //                 <main role="main" className="col-lg-12 ml-auto mr-auto"
-    //                       style={{maxWidth: '500px', paddingTop: '20px'}}>
-    //                     <h2>Welcome Back, Manager!</h2>
-    //                     <p>User Name: {this.props.userName}</p>
-    //                     <p>Address: {this.props.accountAddress}</p>
-    //                     <p>Avatar: <img
-    //                         className='ml-2'
-    //                         width='30'
-    //                         height='30'
-    //                         src={`data:image/png;base64,${new Identicon(this.props.accountAddress, 30).toString()}`}
-    //                     /></p>
-    //                 </main>
-    //             </div>
-    //         </div>
-    //     )
-    // }
+
+    constructor(props) {
+        super(props)
+        this.state = {
+            networkData: null,
+            //current account
+            account: '',
+            userCrud: null,
+            accountsLength: 0,
+            userName: '',
+            userAddress: '',
+            //Todo List
+            todoList: null,
+            tasks: [],
+            taskCount: 0,
+            //All user
+            users: [],
+            loading: true,
+
+        }
+
+        this.createTask = this.createTask.bind(this)
+    }
 
 
     async componentWillMount() {
@@ -51,49 +53,62 @@ class index extends Component {
         } else {
             window.alert('Non-Ethereum browser detected. You should consider trying MetaMask!')
         }
+
+        const accounts = await window.web3.eth.getAccounts()
+        this.setState({account: accounts[0]})
+
+        const networkId = await window.web3.eth.net.getId()
+        const networkData = UserCrud.networks[networkId]
+        this.setState({networkData})
     }
 
     async checkLoggedIn() {
         const web3 = window.web3
-        // Load account
-        const accounts = await web3.eth.getAccounts()
-        this.setState({account: accounts[0]})
-        // Network ID
-        const networkId = await web3.eth.net.getId()
-        const networkData = UserModel.networks[networkId]
-        if (networkData) {
-            const userModel = web3.eth.Contract(UserModel.abi, networkData.address)
-            this.setState({userModel})
-            const accountsLength = await userModel.methods.totalUser().call()
+
+        if (this.state.networkData) {
+            //fetch contract
+            const userCrud = web3.eth.Contract(UserCrud.abi, this.state.networkData.address)
+            this.setState({userCrud})
+
+            const accountsLength = await userCrud.methods.totalUser().call()
             this.setState({accountsLength})
-            // Load Accounts
-            for (let i = 1; i <= accountsLength; i++) {
-                const user = await userModel.methods.users(i).call()
-                if (user.userAddress === this.state.account && user.role === "Manager") {
-                    this.setState({userName: user.userName})
-                    this.setState({userAddress: user.userAddress})
-                    console.log(this.state.userAddress)
-                    //console.log(this.state.isManager+" "+this.state.userName)
-                }
+
+            const accountDetail = await userCrud.methods.getByAddress(this.state.account).call()
+
+            if(accountDetail.userRole === "Manager"){
+                this.setState({userName: accountDetail.userName})
+                this.setState({userAddress: this.state.account})
             }
 
+            for (let i = 0; i < accountsLength; i++) {
+                //get registered user list
+                const userInfo = await userCrud.methods.getUserById(i).call()
+                let user = {
+                    userName : userInfo.userName,
+                    userAddress: userInfo.userAddress
+                }
+                this.setState({
+                    users: [...this.state.users, user]
+                })
+
+            }
+        }else {
+            window.alert('Network error!')
         }
     }
 
     async loadTaskListData() {
         const web3 = window.web3
-        // Load account
-        const accounts = await web3.eth.getAccounts()
-        this.setState({account: accounts[0]})
-        console.log(accounts[0])
-        // Network ID
+
         const networkId = await web3.eth.net.getId()
         const networkData = TodoList.networks[networkId]
         if (networkData) {
             const todoList = web3.eth.Contract(TodoList.abi, networkData.address)
             this.setState({todoList})
             const taskCount = await todoList.methods.taskCount().call()
+
             this.setState({taskCount})
+
             // Load Tasks
             for (var i = 1; i <= taskCount; i++) {
                 const task = await todoList.methods.tasks(i).call()
@@ -114,26 +129,6 @@ class index extends Component {
                 this.setState({loading: false})
             })
     }
-
-
-    constructor(props) {
-        super(props)
-        this.state = {
-            account: '',
-            userModel: null,
-            accountsLength: 0,
-            userName: '',
-            userAddress: '',
-            loading: true,
-            //Todo List
-            todoList: null,
-            tasks: [],
-            taskCount: 0,
-        }
-
-        this.createTask = this.createTask.bind(this)
-    }
-
 
 
 
@@ -189,7 +184,9 @@ class index extends Component {
                             userName={this.state.userName}/>
                     </Route>
                     <Route path="/user-list">
-                        <UserList />
+                        <UserList
+                            users = {this.state.users}
+                        />
                     </Route>
 
                     <Route path="/task-management">

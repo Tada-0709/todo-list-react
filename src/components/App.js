@@ -5,8 +5,8 @@ import './App.css';
 
 //import abis
 import TodoList from '../abis/TodoList.json'
-import UserModel from '../abis/UserModel.json'
-import User from '../abis/UserCrud.json'
+//import UserCrud from '../abis/UserCrud.json'
+import UserCrud from '../abis/UserCrud.json'
 
 import ReactDOM from 'react-dom';
 import { Router, Route, Link, browserHistory, IndexRoute } from 'react-router'
@@ -34,17 +34,17 @@ class App extends Component {
         } else {
             window.alert('Non-Ethereum browser detected. You should consider trying MetaMask!')
         }
+
+        const accounts = await window.web3.eth.getAccounts()
+        this.setState({account: accounts[0]})
     }
 
     async loadBlockchainData() {
         const web3 = window.web3
-        // Load account
-        const accounts = await web3.eth.getAccounts()
-        this.setState({account: accounts[0]})
-        console.log(accounts[0])
         // Network ID
         const networkId = await web3.eth.net.getId()
         const networkData = TodoList.networks[networkId]
+
         if (networkData) {
             const todoList = web3.eth.Contract(TodoList.abi, networkData.address)
             this.setState({todoList})
@@ -65,30 +65,40 @@ class App extends Component {
 
     async checkLoggedIn() {
         const web3 = window.web3
-        // Load account
-        const accounts = await web3.eth.getAccounts()
-        this.setState({account: accounts[0]})
+
         // Network ID
         const networkId = await web3.eth.net.getId()
-        const networkData = UserModel.networks[networkId]
+        const networkData = UserCrud.networks[networkId]
         if (networkData) {
-            const userModel = web3.eth.Contract(UserModel.abi, networkData.address)
-            this.setState({userModel})
-            const accountsLength = await userModel.methods.totalUser().call()
+            const userCrud = web3.eth.Contract(UserCrud.abi, networkData.address)
+            this.setState({userCrud})
+            const accountsLength = await userCrud.methods.totalUser().call()
+
             this.setState({accountsLength})
             // Load Accounts
-            for (let i = 1; i <= accountsLength; i++) {
-                const user = await userModel.methods.users(i).call()
-                console.log(user.role);
-                if (user.userAddress === this.state.account && user.role !== "Manager") {
-                    this.setState({isNewUser: false})
-                    this.setState({userName: user.userName})
-                }
-                if (user.userAddress === this.state.account && user.role === "Manager") {
-                    this.setState({isManager: true})
-                    this.setState({userName: user.userName})
-                    //console.log(this.state.isManager+" "+this.state.userName)
-                }
+            // for (let i = 1; i <= accountsLength; i++) {
+            //     const user = await userCrud.methods.users(i).call()
+            //
+            //     if (user.userAddress === this.state.account && user.role !== "Manager") {
+            //         this.setState({isNewUser: false})
+            //         this.setState({userName: user.userName})
+            //     }
+            //     if (user.userAddress === this.state.account && user.role === "Manager") {
+            //         this.setState({isManager: true})
+            //         this.setState({userName: user.userName})
+            //         //console.log(this.state.isManager+" "+this.state.userName)
+            //     }
+            // }
+
+            const currentAccount = await userCrud.methods.getByAddress(this.state.account).call()
+            console.log(currentAccount);
+            if(currentAccount.userRole === "User" ){
+                this.setState({isNewUser: false})
+                this.setState({userName: currentAccount.userName})
+            }
+            if(currentAccount.userRole === "Manager"){
+                this.setState({isManager: true})
+                this.setState({userName: currentAccount.userName})
             }
 
         }
@@ -96,7 +106,7 @@ class App extends Component {
 
     createUser(accountName, accountAddress) {
         this.setState({loading: true})
-        this.state.userModel.methods.createUser(accountName, accountAddress, "User").send({from: this.state.account})
+        this.state.userCrud.methods.createUser(accountName, accountAddress, "User").send({from: this.state.account})
             .once('receipt', (receipt) => {
                 this.setState({loading: false})
             })
@@ -126,7 +136,7 @@ class App extends Component {
         this.state = {
             account: '',
             todoList: null,
-            userModel: null,
+            UserCrud: null,
             taskCount: 0,
             accountsLength: 0,
             tasks: [],
@@ -137,7 +147,7 @@ class App extends Component {
         }
 
         this.createTask = this.createTask.bind(this)
-        this.toggleCompleted = this.toggleCompleted.bind(this)
+        //this.toggleCompleted = this.toggleCompleted.bind(this)
         this.createUser = this.createUser.bind(this)
     }
 

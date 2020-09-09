@@ -1,39 +1,63 @@
 pragma solidity ^0.5.0;
+
 import "./User.sol";
 
 contract UserCrud{
 
-    uint private totalUser;
-    User[] private users;
+    uint public totalUser;
+    mapping(uint => User) public users;
 
     constructor() public{
         totalUser = 0;
+        //by default create the deployer as the managers
+        createUser("Manager123", msg.sender, "Manager");
     }
 
     //////////////////////////-----------Function-------------//////////////////////////
 
-    function create(string memory _userName, address payable _userAddress) public {
-        //increase number of users in storage
+    function createUser(string memory _userName, address payable _userAddress, string memory _role) public {
+//        //increase number of users in storage
+//
+//        //create new user by calling constructor of User
+//        User user = new User(totalUser, _userName,  _userAddress, "User");
+//        //push it to users list
+//        users.push(user);
+//        //emit event
+
+        users[totalUser] = new User(totalUser, _userName, _userAddress, _role);
+
         totalUser++;
-        //create new user by calling constructor of User
-        User user = new User(totalUser, _userName,  _userAddress, "User");
-        //push it to users list
-        users.push(user);
-        //emit event
+
         emit UserCreated(totalUser, _userName, _userAddress, "User");
     }
 
-    function getById(uint _id) public view returns (string memory) {
+    function getUserById(uint _id) public view returns (string memory userName, address payable userAddress) {
 
         User user = users[_id];
 
-        return (user.getUserName());
+        return (user.getUserName(), user.getUserAddress());
 
     }
-    //view keyword
-    function getTotalUser() public view returns (uint256 length){
-        return users.length;
+
+    function getByAddress(address payable _userAddress) public view returns(string memory userName, string memory userRole){
+
+        string memory uName;
+        string memory uRole;
+
+        for(uint i = 0; i < totalUser; i++){
+                User user = users[i];
+                if(user.getUserAddress() == _userAddress){
+                    uName = user.getUserName();
+                    uRole = user.getUserRole();
+                }
+        }
+
+        return (uName, uRole);
     }
+
+//    function getTotalUser() public view returns (uint256 numberOfUser){
+//        return users.length;
+//    }
 
     function update(uint _id, string memory _userName) public {
         User user = users[_id];
@@ -41,10 +65,6 @@ contract UserCrud{
         user.setUserName(_userName);
 
         users[_id] = user;
-    }
-
-    function sayHello(uint _id) public returns(string memory) {
-        return "hello";
     }
 
     //////////////////////////-----------Event-------------//////////////////////////
