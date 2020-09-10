@@ -4,7 +4,7 @@ contract Group{
 
     uint gId;
     string private groupName;
-    uint private numberOfMember;
+    uint public numberOfMember;
 
     constructor(uint _gId, string memory _groupName, uint _numberOfMember) public{
         gId = _gId;

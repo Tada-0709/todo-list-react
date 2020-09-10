@@ -1,17 +1,16 @@
 import React, {Component} from 'react';
 import Identicon from "identicon.js";
-
+import Web3 from "web3";
 import {BrowserRouter as Router, Link, Route, Switch} from "react-router-dom";
+//Import Component
 import TaskManagement from "./Task-Management";
 import Info from "./Info"
 import UserList from "./User-List";
-
-import Web3 from "web3";
-import UserCrud from "../../abis/UserCrud";
-import TodoList from "../../abis/TodoList";
+import GroupManagement from "./Group-Management";
+//Import Abis
+import Main from "../../abis/Main"
 
 class index extends Component {
-
 
     constructor(props) {
         super(props)
@@ -19,7 +18,6 @@ class index extends Component {
             networkData: null,
             //current account
             account: '',
-            userCrud: null,
             accountsLength: 0,
             userName: '',
             userAddress: '',
@@ -30,17 +28,20 @@ class index extends Component {
             //All user
             users: [],
             loading: true,
-
+            //Group
+            groupCount: 0,
+            groups: [],
+            main:null,
         }
 
         this.createTask = this.createTask.bind(this)
+        this.createGroup = this.createGroup.bind(this)
     }
 
 
     async componentWillMount() {
         await this.loadWeb3()
         await this.checkLoggedIn()
-        await this.loadTaskListData()
     }
 
 
@@ -58,7 +59,7 @@ class index extends Component {
         this.setState({account: accounts[0]})
 
         const networkId = await window.web3.eth.net.getId()
-        const networkData = UserCrud.networks[networkId]
+        const networkData = Main.networks[networkId]
         this.setState({networkData})
     }
 
@@ -67,22 +68,22 @@ class index extends Component {
 
         if (this.state.networkData) {
             //fetch contract
-            const userCrud = web3.eth.Contract(UserCrud.abi, this.state.networkData.address)
-            this.setState({userCrud})
-
-            const accountsLength = await userCrud.methods.totalUser().call()
+            const main = web3.eth.Contract(Main.abi, this.state.networkData.address)
+            this.setState({main})
+            /////////////////-----User-----/////////////////
+            const accountsLength = await main.methods.userCount().call()
             this.setState({accountsLength})
 
-            const accountDetail = await userCrud.methods.getByAddress(this.state.account).call()
+            const accountDetail = await main.methods.getByAddress(this.state.account).call()
 
             if(accountDetail.userRole === "Manager"){
                 this.setState({userName: accountDetail.userName})
                 this.setState({userAddress: this.state.account})
             }
-
+            //load all account
             for (let i = 0; i < accountsLength; i++) {
                 //get registered user list
-                const userInfo = await userCrud.methods.getUserById(i).call()
+                const userInfo = await main.methods.getUserById(i).call()
                 let user = {
                     userName : userInfo.userName,
                     userAddress: userInfo.userAddress
@@ -92,39 +93,70 @@ class index extends Component {
                 })
 
             }
+
+            /////////////////-----Group-----/////////////////
+
+            const groupCount = await main.methods.groupCount().call()
+            this.setState({groupCount})
+
+            console.log(groupCount)
+
+            for (let i = 0; i < groupCount; i++) {
+                //const task = await groupCrud.methods.tasks(i).call()
+                const groupInfo = await main.methods.getGroupById(i).call()
+                let num = groupInfo.numberOfMember.toNumber()
+                //num = num.toNumber()
+                let group = {
+                    groupName : groupInfo.groupName,
+                    numberOfMember: num
+                }
+                this.setState({
+                    groups: [...this.state.groups, group]
+                })
+            }
+            console.log(this.state.groups)
+
+            /////////////////-----Task-----/////////////////
+
+            const taskCount = await main.methods.taskCount().call()
+            this.setState({taskCount})
+
+            //load tasks
+            for (let i = 0; i < taskCount; i++) {
+                const taskDetail = await main.methods.getTaskById(i).call()
+                let task ={
+                    content : taskDetail.content,
+                    createdBy : taskDetail.createdBy,
+                    completed: taskDetail.completed,
+                    completedBy: taskDetail.completedBy
+                }
+
+                this.setState({
+                          tasks: [...this.state.tasks, task]
+                })
+
+            }
+
         }else {
             window.alert('Network error!')
         }
     }
 
-    async loadTaskListData() {
-        const web3 = window.web3
 
-        const networkId = await web3.eth.net.getId()
-        const networkData = TodoList.networks[networkId]
-        if (networkData) {
-            const todoList = web3.eth.Contract(TodoList.abi, networkData.address)
-            this.setState({todoList})
-            const taskCount = await todoList.methods.taskCount().call()
 
-            this.setState({taskCount})
-
-            // Load Tasks
-            for (var i = 1; i <= taskCount; i++) {
-                const task = await todoList.methods.tasks(i).call()
-                this.setState({
-                    tasks: [...this.state.tasks, task]
-                })
-            }
-            this.setState({loading: false})
-        } else {
-            window.alert('TodoList contract not deployed to detected network.')
-        }
-    }
+    //////////////////////-------Function-------//////////////////////
 
     createTask(content) {
         this.setState({loading: true})
-        this.state.todoList.methods.createTask(content).send({from: this.state.account})
+        this.state.main.methods.createTask(content).send({from: this.state.account})
+            .once('receipt', (receipt) => {
+                this.setState({loading: false})
+            })
+    }
+
+    createGroup(groupName) {
+        this.setState({loading: true})
+        this.state.main.methods.createGroup(groupName).send({from: this.state.account})
             .once('receipt', (receipt) => {
                 this.setState({loading: false})
             })
@@ -186,6 +218,13 @@ class index extends Component {
                     <Route path="/user-list">
                         <UserList
                             users = {this.state.users}
+                        />
+                    </Route>
+
+                    <Route path="/group-management">
+                        <GroupManagement
+                            groups = {this.state.groups}
+                            createGroup = {this.createGroup}
                         />
                     </Route>
 
