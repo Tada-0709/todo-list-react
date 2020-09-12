@@ -81,7 +81,7 @@ class index extends Component {
                 this.setState({userAddress: this.state.account})
             }
             //load all account
-            for (let i = 0; i < accountsLength; i++) {
+            for (let i = 1; i <= accountsLength; i++) {
                 //get registered user list
                 const userInfo = await main.methods.getUserById(i).call()
                 let user = {
@@ -101,20 +101,21 @@ class index extends Component {
 
             console.log(groupCount)
 
-            for (let i = 0; i < groupCount; i++) {
+            for (let i = 1; i <= groupCount; i++) {
                 //const task = await groupCrud.methods.tasks(i).call()
                 const groupInfo = await main.methods.getGroupById(i).call()
-                let num = groupInfo.numberOfMember.toNumber()
+                let numMem = groupInfo.numberOfMember.toNumber()
+                let gId = groupInfo.gId.toNumber()
                 //num = num.toNumber()
                 let group = {
                     groupName : groupInfo.groupName,
-                    numberOfMember: num
+                    numberOfMember: numMem,
+                    gId: gId,
                 }
                 this.setState({
                     groups: [...this.state.groups, group]
                 })
             }
-            console.log(this.state.groups)
 
             /////////////////-----Task-----/////////////////
 
@@ -122,7 +123,7 @@ class index extends Component {
             this.setState({taskCount})
 
             //load tasks
-            for (let i = 0; i < taskCount; i++) {
+            for (let i = 1; i <= taskCount; i++) {
                 const taskDetail = await main.methods.getTaskById(i).call()
                 let task ={
                     content : taskDetail.content,

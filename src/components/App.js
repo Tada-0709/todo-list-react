@@ -48,9 +48,8 @@ class App extends Component {
             const accountsLength = await main.methods.userCount().call()
 
             this.setState({accountsLength})
-
             const currentAccount = await main.methods.getByAddress(this.state.account).call()
-            console.log(currentAccount);
+
             if(currentAccount.userRole === "User" ){
                 this.setState({isNewUser: false})
                 this.setState({userName: currentAccount.userName})

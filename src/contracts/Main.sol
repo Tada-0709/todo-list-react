@@ -9,16 +9,25 @@ contract Main{
 
     uint public groupCount;
     mapping(uint => Group) public groups;
-    //one group - many users
+    //one group - has many users
     mapping(uint => User[]) public groupMembers;
+    mapping(uint => uint[]) public oneGroupManyMembers;
+    //one group - has many tasks
+    mapping(uint => Task[]) public groupTasks;
 
     uint public userCount;
     mapping(uint => User) public users;
     //one user - one group
-    mapping(uint => Group) public userGroup;
+    mapping(uint => uint) public oneUserOneGroup;
+    //one user - has many tasks
+    mapping(uint => Task[]) public userTasks;
 
     uint public taskCount;
     mapping(uint => Task) public tasks;
+    //one task - belong to one group
+    mapping(uint => Group) public taskGroup;
+    //one task - belong to one user
+    mapping(uint => User) public taskUser;
 
     constructor() public {
         groupCount = 0;
@@ -31,7 +40,7 @@ contract Main{
         createTask("Finish your thesis before 2nd Oct.");
     }
 
-    event groupCreated(uint gId, string groupName, uint numberOfMember);
+    event groupCreated(uint gId, string groupName, uint numberOfMember, uint numberOfTask);
     event UserCreated(uint id, string userName, address payable userAddress, string role);
     event TaskCreated(uint id, string content, bool completed, address payable createdBy, address payable completedBy);
 
@@ -39,9 +48,9 @@ contract Main{
     function createGroup(string memory _groupName) public {
         // Require valid content
         require(bytes(_groupName).length > 0);
-        groups[groupCount] = new Group(groupCount, _groupName,0);
         groupCount ++;
-        emit groupCreated(groupCount, _groupName, 0);
+        groups[groupCount] = new Group(groupCount, _groupName,0,0);
+        emit groupCreated(groupCount, _groupName, 0, 0);
     }
 
     function getGroups() view public returns(uint[] memory, string[] memory){
@@ -49,7 +58,7 @@ contract Main{
         uint[] memory gids = new uint[](groupCount);
         string[] memory groupNames = new string[](groupCount);
 
-        for(uint i = 0; i < groupCount; i++){
+        for(uint i = 1; i <= groupCount; i++){
             Group group = groups[i];
             gids[i] = group.getId();
             groupNames[i] = group.getGroupName();
@@ -58,43 +67,35 @@ contract Main{
         return(gids, groupNames);
     }
 
-    function getGroupById(uint _id) view public returns(string memory groupName, uint numberOfMember){
+    function getGroupById(uint _id) view public returns(string memory groupName, uint gId, uint numberOfMember){
 
         Group group = groups[_id];
 
-        return (group.getGroupName(), group.getNumberOfMember());
+        uint numOfMember = oneGroupManyMembers[_id].length;
+
+        return (group.getGroupName(), _id, numOfMember);
     }
 
     function addMember(uint _gID, uint _userID) public{
         // Group ID and User ID must be existed
-        require(_gID < groupCount && _userID < userCount);
+        require(_gID <= groupCount && _userID <= userCount);
 
-        string memory _userName;
-        address payable _userAddress;
-        (_userName, _userAddress) = getUserById(_userID);
+        oneGroupManyMembers[_gID].push(_userID);
 
-        User user = new User(_userID, _userName, _userAddress, "User");
-
-        groupMembers[_gID].push(user);
-
-        Group group = groups[_gID];
-
-        uint numOfMember = group.getNumberOfMember();
-        group.setNumberOfMember(++numOfMember);
-
-        groups[_gID] = group;
+        oneUserOneGroup[_userID] = _gID;
     }
 
     function getMembers(uint _gID) view public returns(uint[] memory){
 
-        uint totalMember = groups[_gID].getNumberOfMember();
+        //uint totalMember = groups[_gID].getNumberOfMember();
+
+        uint totalMember = oneGroupManyMembers[_gID].length;
 
         uint[] memory ids = new uint[](totalMember);
 
         for (uint i = 0; i < totalMember; i++) {
 
-            User user = groupMembers[_gID][i];
-            ids[i] = user.getId();
+            ids[i] = oneGroupManyMembers[_gID][i];
 
         }
         return (ids);
@@ -104,19 +105,44 @@ contract Main{
     //////////////////////////////------User-------//////////////////////////////////////////
 
     function createUser(string memory _userName, address payable _userAddress, string memory _role) public {
-        users[userCount] = new User(userCount, _userName, _userAddress, _role);
-
         userCount++;
-
+        users[userCount] = new User(userCount, _userName, _userAddress, _role);
+        oneUserOneGroup[userCount] = 0;
         emit UserCreated(userCount, _userName, _userAddress, "User");
     }
 
-    function getUserById(uint _id) public view returns (string memory userName, address payable userAddress) {
+    function getUserById(uint _id) public view returns (string memory userName, address payable userAddress, uint uid) {
 
         User user = users[_id];
 
-        return (user.getUserName(), user.getUserAddress());
+        return (user.getUserName(), user.getUserAddress(), _id);
 
+    }
+
+    function getAvailableUser() public view returns(uint[] memory uIds){
+        uint indexCount = 0;
+
+        for(uint i = 1; i <= userCount; i++){
+            if(oneUserOneGroup[i] == 0){
+                indexCount++;
+            }
+        }
+
+        uint[] memory _uIds = new uint[](indexCount);
+
+        uint j = 0;
+        for(uint i = 1; i <= userCount; i++){
+            if(oneUserOneGroup[i] == 0){
+                _uIds[j] = i;
+                j++;
+            }
+        }
+
+        return _uIds;
+    }
+
+    function getTest() public view returns(bool right){
+        return oneUserOneGroup[1]==0;
     }
 
     function getByAddress(address payable _userAddress) public view returns(string memory userName, string memory userRole){
@@ -124,7 +150,7 @@ contract Main{
         string memory uName;
         string memory uRole;
 
-        for(uint i = 0; i < userCount; i++){
+        for(uint i = 1; i <= userCount; i++){
             User user = users[i];
             if(user.getUserAddress() == _userAddress){
                 uName = user.getUserName();
@@ -148,8 +174,8 @@ contract Main{
         // Require valid content
         require(bytes(_content).length > 0);
         //increase the number of Task
-        tasks[taskCount] = new Task(taskCount, _content, false, msg.sender, address(0));
         taskCount++;
+        tasks[taskCount] = new Task(taskCount, _content, false, msg.sender, address(0));
         emit TaskCreated(taskCount, _content, false, msg.sender, address(0));
     }
 
