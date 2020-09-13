@@ -19,14 +19,14 @@ contract Main{
     //one user - one group
     mapping(uint => uint) public oneUserOneGroup;
     //one user - has many tasks
-    mapping(uint => Task[]) public userTasks;
+    mapping(uint => uint[]) public oneUserManyTasks;
 
     uint public taskCount;
     mapping(uint => Task) public tasks;
     //one task - belong to one group
     mapping(uint => uint) public oneTaskOneGroup;
     //one task - belong to one user
-    mapping(uint => User) public taskUser;
+    mapping(uint => uint) public oneTaskOneUser;
 
     constructor() public {
         groupCount = 0;
@@ -111,6 +111,12 @@ contract Main{
 
     }
 
+    function getGroupByUserId(uint _uId) public view returns(uint gId){
+
+        return oneUserOneGroup[_uId];
+
+    }
+
     //////////////////////////////------User-------//////////////////////////////////////////
 
     function createUser(string memory _userName, address payable _userAddress, string memory _role) public {
@@ -154,20 +160,22 @@ contract Main{
         return oneUserOneGroup[1]==0;
     }
 
-    function getByAddress(address payable _userAddress) public view returns(string memory userName, string memory userRole){
+    function getByAddress(address payable _userAddress) public view returns(string memory userName, string memory userRole, uint uId){
 
         string memory uName;
         string memory uRole;
+        uint uID;
 
         for(uint i = 1; i <= userCount; i++){
             User user = users[i];
             if(user.getUserAddress() == _userAddress){
                 uName = user.getUserName();
                 uRole = user.getUserRole();
+                uID = user.getId();
             }
         }
 
-        return (uName, uRole);
+        return (uName, uRole, uID);
     }
 
     function update(uint _id, string memory _userName) public {
@@ -231,6 +239,17 @@ contract Main{
         return _tIds;
 
     }
+
+    function assignTask(uint _tId, uint _uId) public{
+
+        require(_tId <= taskCount && _uId <= userCount);
+
+        oneUserManyTasks[_uId].push(_tId);
+
+        oneTaskOneUser[_tId] = _uId;
+    }
+
+
 
 
 }

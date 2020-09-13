@@ -141,6 +141,13 @@ class GroupManagement extends Component {
                 )
             }, this);
 
+        let userListForAssign = this.state.groupMembers.length > 0
+            && this.state.groupMembers.map((user, i)=>{
+                return (
+                    <option key={i} value={user.uid.toNumber()}>{user.userName}</option>
+                )
+            }, this);
+
         return (
             <div className="container-fluid mt-5 col-md-6">
                 <h4>Group: {this.state.selectedGroupId}</h4>
@@ -203,8 +210,8 @@ class GroupManagement extends Component {
                     <tr>
                         <th>No.</th>
                         <th>Task Content</th>
-                        <th>Status</th>
-                        <th>Task ID</th>
+                        <th>Completed</th>
+                        <th>Assign</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -213,8 +220,9 @@ class GroupManagement extends Component {
                                 <tr key={"gRow-" + key}>
                                     <td key={key + "-1"}>{key + 1}</td>
                                     <td key={key + "-2"}>{task.content}</td>
-                                    <td key={key + "-3"}>{task.completed?"Done":"Not Done"}</td>
-                                    <td key={key + "-4"}>{task.tId.toNumber()}</td>
+                                    <td key={key + "-3"}>{task.completed?"Done":"Not Yet"}</td>
+                                    {/*<td key={key + "-4"}>{task.tId.toNumber()}</td>*/}
+                                    <td key={key + "-4"}>None</td>
                                 </tr>
                             )
                         }
@@ -222,7 +230,31 @@ class GroupManagement extends Component {
                     }
                     </tbody>
                 </table>
+                &nbsp;
+                <h4>Assign Task</h4>
+                <div className="row" style={{marginLeft: 0}}>
+                    <form onSubmit={(event) => {
+                        event.preventDefault()
+                        this.handleAddTask()
+                    }}>
+                        <label>Assign Task:</label>
+                        &nbsp;
+                        <select onChange={this.handleSelectTaskChange}>
+                            {optionTaskList}
+                        </select>
+                        &nbsp;
+                        <label>to User:</label>
+                        &nbsp;
+                        <select onChange={this.handleSelectTaskChange}>
+                            {userListForAssign}
+                        </select>
+                        &nbsp;
+                        <button className="btn btn-primary">Add</button>
+                    </form>
+                </div>
             </div>
+
+
 
         )
     }
