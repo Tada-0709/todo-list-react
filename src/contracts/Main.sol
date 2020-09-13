@@ -10,10 +10,9 @@ contract Main{
     uint public groupCount;
     mapping(uint => Group) public groups;
     //one group - has many users
-    mapping(uint => User[]) public groupMembers;
     mapping(uint => uint[]) public oneGroupManyMembers;
     //one group - has many tasks
-    mapping(uint => Task[]) public groupTasks;
+    mapping(uint => uint[]) public oneGroupManyTasks;
 
     uint public userCount;
     mapping(uint => User) public users;
@@ -25,7 +24,7 @@ contract Main{
     uint public taskCount;
     mapping(uint => Task) public tasks;
     //one task - belong to one group
-    mapping(uint => Group) public taskGroup;
+    mapping(uint => uint) public oneTaskOneGroup;
     //one task - belong to one user
     mapping(uint => User) public taskUser;
 
@@ -67,13 +66,14 @@ contract Main{
         return(gids, groupNames);
     }
 
-    function getGroupById(uint _id) view public returns(string memory groupName, uint gId, uint numberOfMember){
+    function getGroupById(uint _id) view public returns(string memory groupName, uint gId, uint numberOfMember, uint numberOfTask){
 
         Group group = groups[_id];
 
         uint numOfMember = oneGroupManyMembers[_id].length;
+        uint numOfTask =  oneGroupManyTasks[_id].length;
 
-        return (group.getGroupName(), _id, numOfMember);
+        return (group.getGroupName(), _id, numOfMember, numOfTask);
     }
 
     function addMember(uint _gID, uint _userID) public{
@@ -83,6 +83,15 @@ contract Main{
         oneGroupManyMembers[_gID].push(_userID);
 
         oneUserOneGroup[_userID] = _gID;
+    }
+
+    function addTask(uint _gID, uint _tID) public{
+
+        require(_gID <= groupCount && _tID <= taskCount);
+
+        oneGroupManyTasks[_gID].push(_tID);
+
+        oneTaskOneGroup[_tID] = _gID;
     }
 
     function getMembers(uint _gID) view public returns(uint[] memory){
@@ -179,9 +188,48 @@ contract Main{
         emit TaskCreated(taskCount, _content, false, msg.sender, address(0));
     }
 
-    function getTaskById(uint _tId) public view returns(string memory content, address payable createdBy, bool completed, address payable completedBy){
+    function getTaskById(uint _tId) public view returns(string memory content, uint tId, address payable createdBy, bool completed, address payable completedBy){
         Task task = tasks[_tId];
-        return (task.getTaskContent(), task.getCreatedBy(), task.getCompleted(), task.getCompletedBy());
+        return (task.getTaskContent(), _tId, task.getCreatedBy(), task.getCompleted(), task.getCompletedBy());
+    }
+
+    function getTasksByGroupId(uint _gId) public view returns(uint[] memory tIds){
+
+        uint totalTask= oneGroupManyTasks[_gId].length;
+
+        uint[] memory ids = new uint[](totalTask);
+
+        for (uint i = 0; i < totalTask; i++) {
+
+            ids[i] = oneGroupManyTasks[_gId][i];
+
+        }
+        return (ids);
+
+    }
+
+    function getAvailableTask() public view returns(uint[] memory tIds){
+
+        uint indexCount = 0;
+
+        for(uint i = 1; i <= taskCount; i++){
+            if(oneTaskOneGroup[i] == 0){
+                indexCount++;
+            }
+        }
+
+        uint[] memory _tIds = new uint[](indexCount);
+
+        uint j = 0;
+        for(uint i = 1; i <= taskCount; i++){
+            if(oneTaskOneGroup[i] == 0){
+                _tIds[j] = i;
+                j++;
+            }
+        }
+
+        return _tIds;
+
     }
 
 

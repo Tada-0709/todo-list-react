@@ -99,18 +99,19 @@ class index extends Component {
             const groupCount = await main.methods.groupCount().call()
             this.setState({groupCount})
 
-            console.log(groupCount)
-
             for (let i = 1; i <= groupCount; i++) {
                 //const task = await groupCrud.methods.tasks(i).call()
                 const groupInfo = await main.methods.getGroupById(i).call()
+                console.log(groupInfo)
                 let numMem = groupInfo.numberOfMember.toNumber()
                 let gId = groupInfo.gId.toNumber()
+                let numTask = groupInfo.numberOfTask.toNumber()
                 //num = num.toNumber()
                 let group = {
                     groupName : groupInfo.groupName,
                     numberOfMember: numMem,
                     gId: gId,
+                    numberOfTask: numTask,
                 }
                 this.setState({
                     groups: [...this.state.groups, group]

@@ -15,12 +15,17 @@ class GroupManagement extends Component {
             selectedGroupId: null,
             main: null,
             availableUsers: [],
+            availableTasks: [],
             selectedUser: null,
+            selectedTask: null,
             groupMembers: [],
+            groupTasks: [],
         };
         this._onViewButtonClick = this._onViewButtonClick.bind(this);
         this.handleSelectChange = this.handleSelectChange.bind(this);
+        this.handleSelectTaskChange = this.handleSelectTaskChange.bind(this);
         this.handleAddMember = this.handleAddMember.bind(this);
+        this.handleAddTask = this.handleAddTask.bind(this);
     }
 
     async loadWeb3() {
@@ -42,7 +47,13 @@ class GroupManagement extends Component {
     }
 
     async _onViewButtonClick(groupId) {
-        this.setState({selectedGroupId:groupId});
+        this.setState({
+            selectedGroupId: groupId,
+            groupMembers: [],
+            availableUsers: [],
+            availableTasks: [],
+            groupTasks: [],
+        });
 
         await this.loadData()
 
@@ -54,14 +65,22 @@ class GroupManagement extends Component {
 
     handleSelectChange(event) {
         this.setState({selectedUser: event.target.value});
-
     }
 
-    async handleAddMember(){
-        await this.state.main.methods.addMember(this.state.selectedGroupId,this.state.selectedUser).send({from: this.state.account})
+    handleSelectTaskChange(event) {
+        this.setState({selectedTask: event.target.value});
     }
 
-    async loadData(){
+    handleAddMember() {
+        //console.log(this.state.selectedUser)
+        this.state.main.methods.addMember(this.state.selectedGroupId, this.state.selectedUser).send({from: this.state.account})
+    }
+
+    handleAddTask(){
+        this.state.main.methods.addTask(this.state.selectedGroupId, this.state.selectedTask).send({from: this.state.account})
+    }
+
+    async loadData() {
 
         const web3 = window.web3
         if (this.state.networkData) {
@@ -70,21 +89,37 @@ class GroupManagement extends Component {
             this.setState({main})
             //Get available users
             const availableUserIds = await main.methods.getAvailableUser().call()
-            for(let i = 0; i < availableUserIds.length; i++){
+            for (let i = 0; i < availableUserIds.length; i++) {
                 let user = await main.methods.getUserById(availableUserIds[i]).call()
                 this.setState({
                     availableUsers: [...this.state.availableUsers, user]
                 })
             }
             //Get group members
-            const groupMembers =  await main.methods.getMembers(this.state.selectedGroupId).call()
-            for(let i = 0; i < groupMembers.length; i++){
+            const groupMembers = await main.methods.getMembers(this.state.selectedGroupId).call()
+            for (let i = 0; i < groupMembers.length; i++) {
                 let member = await main.methods.getUserById(groupMembers[i].toNumber()).call()
                 this.setState({
                     groupMembers: [...this.state.groupMembers, member]
                 })
             }
             console.log(this.state.groupMembers)
+            //Get available Tasks
+            const availableTaskIds = await main.methods.getAvailableTask().call()
+            for (let i = 0; i < availableTaskIds.length; i++) {
+                let task = await main.methods.getTaskById(availableTaskIds[i]).call()
+                this.setState({
+                    availableTasks: [...this.state.availableTasks, task]
+                })
+            }
+            //Get Group Task
+            const groupTasks = await main.methods.getTasksByGroupId(this.state.selectedGroupId).call()
+            for (let i = 0; i < groupTasks.length; i++) {
+                let task = await main.methods.getTaskById(groupTasks[i].toNumber()).call()
+                this.setState({
+                    groupTasks: [...this.state.groupTasks, task]
+                })
+            }
 
         }
 
@@ -92,10 +127,17 @@ class GroupManagement extends Component {
 
     GroupDetail() {
 
-        let optionList = this.state.availableUsers.length > 0
+        let optionUserList = this.state.availableUsers.length > 0
             && this.state.availableUsers.map((user, i) => {
                 return (
                     <option key={i} value={user.uid.toNumber()}>{user.userName}</option>
+                )
+            }, this);
+
+        let optionTaskList = this.state.availableTasks.length > 0
+            && this.state.availableTasks.map((task, i) => {
+                return (
+                    <option key={i} value={task.tId.toNumber()}>{task.content}</option>
                 )
             }, this);
 
@@ -103,15 +145,18 @@ class GroupManagement extends Component {
             <div className="container-fluid mt-5 col-md-6">
                 <h4>Group: {this.state.selectedGroupId}</h4>
                 <h4>Member List</h4>
-                <div className="row" style={{marginLeft:0}}>
-                    <form>
-                        <label >Add Member:</label>
+                <div className="row" style={{marginLeft: 0}}>
+                    <form onSubmit={(event) => {
+                        event.preventDefault()
+                        this.handleAddMember()
+                    }}>
+                        <label>Add Member:</label>
                         &nbsp;
                         <select onChange={this.handleSelectChange}>
-                            {optionList}
+                            {optionUserList}
                         </select>
                         &nbsp;
-                        <button className="btn btn-primary" onClick={ async () => {await this.handleAddMember}}>Add</button>
+                        <button className="btn btn-primary">Add</button>
                     </form>
                 </div>
                 <table>
@@ -139,23 +184,43 @@ class GroupManagement extends Component {
                 </table>
                 &nbsp;
                 <h4>Task List</h4>
+                <div className="row" style={{marginLeft: 0}}>
+                    <form onSubmit={(event) => {
+                        event.preventDefault()
+                        this.handleAddTask()
+                    }}>
+                        <label>Add Task:</label>
+                        &nbsp;
+                        <select onChange={this.handleSelectTaskChange}>
+                            {optionTaskList}
+                        </select>
+                        &nbsp;
+                        <button className="btn btn-primary">Add</button>
+                    </form>
+                </div>
                 <table>
                     <thead>
                     <tr>
                         <th>No.</th>
                         <th>Task Content</th>
+                        <th>Status</th>
                         <th>Task ID</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td>0</td>
-                        <td>dasd</td>
-                        <td>2</td>
-                    </tr>
-
+                    {this.state.groupTasks.map((task, key) => {
+                            return (
+                                <tr key={"gRow-" + key}>
+                                    <td key={key + "-1"}>{key + 1}</td>
+                                    <td key={key + "-2"}>{task.content}</td>
+                                    <td key={key + "-3"}>{task.completed?"Done":"Not Done"}</td>
+                                    <td key={key + "-4"}>{task.tId.toNumber()}</td>
+                                </tr>
+                            )
+                        }
+                    )
+                    }
                     </tbody>
-
                 </table>
             </div>
 
@@ -169,7 +234,7 @@ class GroupManagement extends Component {
                 <div className="container-fluid mt-5">
                     &nbsp;
                     <h2>Group Management</h2>
-                    <div className="row" style={{marginLeft:"10px"}}>
+                    <div className="row" style={{marginLeft: "10px"}}>
                         <form className="row" onSubmit={(event) => {
                             event.preventDefault()
                             const groupName = this.groupName.value
@@ -208,7 +273,7 @@ class GroupManagement extends Component {
                                             <td key={"gCol-" + key + "-1"}>{key + 1}</td>
                                             <td key={"gCol-" + key + "-2"}>{group.groupName}</td>
                                             <td key={"gCol-" + key + "-3"}>{group.numberOfMember}</td>
-                                            <td key={"gCol-" + key + "-4"}>{group.gId}</td>
+                                            <td key={"gCol-" + key + "-4"}>{group.numberOfTask}</td>
                                             <td key={"gCol-" + key + "-5"}>
                                                 <button className="btn btn-primary"
                                                         onClick={() => this._onViewButtonClick(group.gId)}>View
