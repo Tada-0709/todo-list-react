@@ -1401,7 +1401,7 @@
                         "name": "this",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 1279,
+                        "referencedDeclaration": 1451,
                         "src": "1264:4:0",
                         "typeDescriptions": {
                           "typeIdentifier": "t_contract$_Group_$120",
@@ -2726,7 +2726,7 @@
                         "name": "this",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 1279,
+                        "referencedDeclaration": 1451,
                         "src": "1264:4:0",
                         "typeDescriptions": {
                           "typeIdentifier": "t_contract$_Group_$120",
@@ -2841,7 +2841,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.2",
-  "updatedAt": "2020-09-13T16:57:28.562Z",
+  "updatedAt": "2020-09-22T13:35:36.558Z",
   "devdoc": {
     "methods": {}
   },

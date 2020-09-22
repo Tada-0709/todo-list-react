@@ -26,7 +26,10 @@ class index extends Component {
             userId : 0,
             main:null,
             groupTasks: [],
+            myTasks: [],
         }
+
+        this.completeTask = this.completeTask.bind(this)
     }
 
     async componentWillMount() {
@@ -86,11 +89,21 @@ class index extends Component {
                         groupTasks: [...this.state.groupTasks, task]
                     })
                 }
-
-
             } else this.setState({userGroupName: "None"})
 
+            //Fetch My Task Data
+            const myTaskIds = await main.methods.getTasksByUserId(this.state.userId).call()
+            for(let i = 0; i < myTaskIds.length; i++){
+                const task = await main.methods.getTaskById(myTaskIds[i].toNumber()).call()
+                this.setState({
+                    myTasks: [...this.state.myTasks, task]
+                })
+            }
         }
+    }
+
+    completeTask(taskId){
+        this.state.main.methods.toggleCompleted(taskId).send({from: this.state.account})
     }
 
 
@@ -153,8 +166,8 @@ class index extends Component {
 
                     <Route path="/user/my-task">
                         <MyTask
-                            // groups = {this.state.groups}
-                            // createGroup = {this.createGroup}
+                            myTasks = {this.state.myTasks}
+                            completeTask = {this.completeTask}
                         />
                     </Route>
 

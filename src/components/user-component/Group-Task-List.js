@@ -16,7 +16,8 @@ class GroupTaskList extends Component{
                             <th>No.</th>
                             <th>Task ID</th>
                             <th>Content</th>
-                            <th>Status</th>
+                            <th>Assign</th>
+                            <th>Completed</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -26,7 +27,8 @@ class GroupTaskList extends Component{
                                         <td key={key + "-1"}>{key + 1}</td>
                                         <td key={key + "-2"}>{task.tId.toNumber()}</td>
                                         <td key={key + "-3"}>{task.content}</td>
-                                        <td key={key + "-4"}>{task.completed?"Done":"Not Done"}</td>
+                                        <td key={key + "-4"}>{task.isAssigned?task.assigneeName:"None"}</td>
+                                        <td key={key + "-5"}>{task.completed?"Done":"Not Done"}</td>
                                     </tr>
                                 )
                             }

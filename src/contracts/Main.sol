@@ -42,11 +42,12 @@ contract Main{
     event groupCreated(uint gId, string groupName, uint numberOfMember, uint numberOfTask);
     event UserCreated(uint id, string userName, address payable userAddress, string role);
     event TaskCreated(uint id, string content, bool completed, address payable createdBy, address payable completedBy);
+    event TaskCompleted(uint id, bool completed, address payable completedBy);
 
 
     function createGroup(string memory _groupName) public {
         // Require valid content
-        require(bytes(_groupName).length > 0);
+        require(bytes(_groupName).length > 0,"Empty Group Name Detected!");
         groupCount ++;
         groups[groupCount] = new Group(groupCount, _groupName,0,0);
         emit groupCreated(groupCount, _groupName, 0, 0);
@@ -78,7 +79,7 @@ contract Main{
 
     function addMember(uint _gID, uint _userID) public{
         // Group ID and User ID must be existed
-        require(_gID <= groupCount && _userID <= userCount);
+        require(_gID <= groupCount && _userID <= userCount,"GroupID or UserID not found!");
 
         oneGroupManyMembers[_gID].push(_userID);
 
@@ -156,9 +157,6 @@ contract Main{
         return _uIds;
     }
 
-    function getTest() public view returns(bool right){
-        return oneUserOneGroup[1]==0;
-    }
 
     function getByAddress(address payable _userAddress) public view returns(string memory userName, string memory userRole, uint uId){
 
@@ -196,9 +194,18 @@ contract Main{
         emit TaskCreated(taskCount, _content, false, msg.sender, address(0));
     }
 
-    function getTaskById(uint _tId) public view returns(string memory content, uint tId, address payable createdBy, bool completed, address payable completedBy){
+    function getTaskById(uint _tId) public view returns(string memory content, uint tId, address payable createdBy, bool completed, address payable completedBy, bool isAssigned, string memory assigneeName){
         Task task = tasks[_tId];
-        return (task.getTaskContent(), _tId, task.getCreatedBy(), task.getCompleted(), task.getCompletedBy());
+        bool _isAssigned = false;
+        string memory _assigneeName = "";
+        if(oneTaskOneGroup[_tId] != 0 && oneTaskOneUser[_tId] != 0){
+            _isAssigned = true;
+            uint userKey = oneTaskOneUser[_tId];
+            //get assignee;
+            (string memory userName,  address payable userAddress, uint uid) = getUserById(userKey);
+            _assigneeName = userName;
+        }
+        return (task.getTaskContent(), _tId, task.getCreatedBy(), task.getCompleted(), task.getCompletedBy(), _isAssigned, _assigneeName);
     }
 
     function getTasksByGroupId(uint _gId) public view returns(uint[] memory tIds){
@@ -210,6 +217,21 @@ contract Main{
         for (uint i = 0; i < totalTask; i++) {
 
             ids[i] = oneGroupManyTasks[_gId][i];
+
+        }
+        return (ids);
+
+    }
+
+    function getTasksByUserId(uint _uId) public view returns(uint[] memory tIds){
+
+        uint totalTask= oneUserManyTasks[_uId].length;
+
+        uint[] memory ids = new uint[](totalTask);
+
+        for (uint i = 0; i < totalTask; i++) {
+
+            ids[i] = oneUserManyTasks[_uId][i];
 
         }
         return (ids);
@@ -249,7 +271,16 @@ contract Main{
         oneTaskOneUser[_tId] = _uId;
     }
 
-
+    function toggleCompleted(uint _tId) public {
+        //create an instance of the stored task in the smart contract
+        Task _task = tasks[_tId];
+        //update the clone
+        _task.setCompleted(true);
+        _task.setCompletedBy(msg.sender);
+        //Assign the clone to stored task
+        tasks[_tId] = _task;
+        emit TaskCompleted(_tId, _task.getCompleted(), _task.getCompletedBy());
+    }
 
 
 }

@@ -18,12 +18,16 @@ class GroupManagement extends Component {
             availableTasks: [],
             selectedUser: null,
             selectedTask: null,
+            pickedTask: null,
+            pickedUser:null,
             groupMembers: [],
             groupTasks: [],
         };
         this._onViewButtonClick = this._onViewButtonClick.bind(this);
         this.handleSelectChange = this.handleSelectChange.bind(this);
         this.handleSelectTaskChange = this.handleSelectTaskChange.bind(this);
+        this.handleSelectChangeForTask =  this.handleSelectChangeForTask.bind(this);
+        this.handleSelectChangeForUser = this.handleSelectChangeForUser.bind(this);
         this.handleAddMember = this.handleAddMember.bind(this);
         this.handleAddTask = this.handleAddTask.bind(this);
     }
@@ -71,13 +75,24 @@ class GroupManagement extends Component {
         this.setState({selectedTask: event.target.value});
     }
 
+    handleSelectChangeForTask(event){
+        this.setState({pickedTask: event.target.value})
+    }
+
+    handleSelectChangeForUser(event){
+        this.setState({pickedUser: event.target.value})
+    }
+
     handleAddMember() {
-        //console.log(this.state.selectedUser)
         this.state.main.methods.addMember(this.state.selectedGroupId, this.state.selectedUser).send({from: this.state.account})
     }
 
     handleAddTask(){
         this.state.main.methods.addTask(this.state.selectedGroupId, this.state.selectedTask).send({from: this.state.account})
+    }
+
+    handleAssignTask(){
+        this.state.main.methods.assignTask(this.state.pickedTask, this.state.pickedUser).send({from: this.state.account})
     }
 
     async loadData() {
@@ -145,6 +160,13 @@ class GroupManagement extends Component {
             && this.state.groupMembers.map((user, i)=>{
                 return (
                     <option key={i} value={user.uid.toNumber()}>{user.userName}</option>
+                )
+            }, this);
+
+        let taskListForAssign = this.state.groupTasks.length > 0
+            && this.state.groupTasks.map((task, i)=>{
+                return (
+                    (task.isAssigned)?null:<option key={i} value={task.tId.toNumber()}>{task.content}</option>
                 )
             }, this);
 
@@ -222,7 +244,7 @@ class GroupManagement extends Component {
                                     <td key={key + "-2"}>{task.content}</td>
                                     <td key={key + "-3"}>{task.completed?"Done":"Not Yet"}</td>
                                     {/*<td key={key + "-4"}>{task.tId.toNumber()}</td>*/}
-                                    <td key={key + "-4"}>None</td>
+                                    <td key={key + "-4"}>{task.isAssigned?task.assigneeName:"None"}</td>
                                 </tr>
                             )
                         }
@@ -235,17 +257,17 @@ class GroupManagement extends Component {
                 <div className="row" style={{marginLeft: 0}}>
                     <form onSubmit={(event) => {
                         event.preventDefault()
-                        this.handleAddTask()
+                        this.handleAssignTask()
                     }}>
                         <label>Assign Task:</label>
                         &nbsp;
-                        <select onChange={this.handleSelectTaskChange}>
-                            {optionTaskList}
+                        <select onChange={this.handleSelectChangeForTask}>
+                            {taskListForAssign}
                         </select>
                         &nbsp;
                         <label>to User:</label>
                         &nbsp;
-                        <select onChange={this.handleSelectTaskChange}>
+                        <select onChange={this.handleSelectChangeForUser}>
                             {userListForAssign}
                         </select>
                         &nbsp;
